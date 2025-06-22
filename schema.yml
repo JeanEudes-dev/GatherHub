@@ -1,0 +1,2118 @@
+openapi: 3.0.3
+info:
+  title: GatherHub API
+  version: 1.0.0
+  description: "\n# GatherHub - Real-Time Community Event Planner API\n\nA comprehensive\
+    \ REST API for managing community events with real-time collaboration features.\n\
+    \n## Features\n- **User Authentication**: JWT-based authentication with registration\
+    \ and profile management\n- **Event Management**: Create, manage, and organize\
+    \ events with timeslots\n- **Voting System**: Real-time voting on event timeslots\
+    \ with live updates\n- **Task Management**: Assign and track tasks with status\
+    \ updates\n- **Real-Time Updates**: WebSocket integration for live collaboration\n\
+    \n## Authentication\nAll endpoints (except registration) require JWT authentication.\
+    \ Include the token in the Authorization header:\n```\nAuthorization: Bearer <your_jwt_token>\n\
+    ```\n\n## Rate Limiting\nAPI requests are rate-limited to prevent abuse:\n- Authentication\
+    \ endpoints: 5 requests/minute\n- Voting endpoints: 10 requests/minute\n- Task\
+    \ endpoints: 20 requests/minute\n- General API: 100 requests/minute per user\n\
+    \n## Error Handling\nThe API returns standard HTTP status codes and JSON error\
+    \ responses:\n- `400`: Bad Request - Invalid input data\n- `401`: Unauthorized\
+    \ - Authentication required\n- `403`: Forbidden - Insufficient permissions\n-\
+    \ `404`: Not Found - Resource not found\n- `429`: Too Many Requests - Rate limit\
+    \ exceeded\n- `500`: Internal Server Error - Server error\n\n## Websocket Support\n\
+    Real-time features are available via WebSocket connections at `/ws/`.\n    "
+  contact:
+    name: GatherHub API Support
+    email: api@gatherhub.com
+  license:
+    name: MIT License
+paths:
+  /api/v1/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      description: "\n        Change the current authenticated user's password.\n\
+        \        \n        Requires the current password for verification and a new\
+        \ password that meets security requirements.\n        \n        **Security\
+        \ Requirements**:\n        - Current password must be provided and correct\n\
+        \        - New password must be at least 8 characters\n        - New password\
+        \ cannot be the same as current password\n        \n        **Authentication\
+        \ Required**: Bearer token in Authorization header.\n        **Rate Limit**:\
+        \ 5 requests per minute per user.\n        "
+      summary: Change Password
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+            examples:
+              PasswordChange:
+                value:
+                  current_password: oldpassword123
+                  new_password: newpassword456
+                summary: Change user password
+                description: Example password change request
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Password changed successfully
+        '400':
+          description: Invalid password data
+  /api/v1/auth/profile/:
+    get:
+      operationId: auth_profile_retrieve
+      description: "\n        Retrieve the current authenticated user's profile information.\n\
+        \        \n        Returns detailed user profile including avatar URL if available.\n\
+        \        \n        **Authentication Required**: Bearer token in Authorization\
+        \ header.\n        "
+      summary: Get User Profile
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                ProfileResponse:
+                  value:
+                    id: 1
+                    email: john.doe@example.com
+                    name: John Doe
+                    avatar: http://localhost:8000/media/avatars/john_doe.jpg
+                    date_joined: '2023-12-01T10:30:00Z'
+                    is_active: true
+                  summary: User profile data
+                  description: Complete user profile information
+          description: User profile retrieved successfully
+        '401':
+          description: Authentication required
+    put:
+      operationId: auth_profile_update
+      description: "\n        Update the current authenticated user's profile information.\n\
+        \        \n        Supports partial updates - only provided fields will be\
+        \ updated.\n        \n        **Updatable Fields**:\n        - name: User's\
+        \ display name (2-50 characters)\n        - avatar: Profile image file (max\
+        \ 5MB, JPEG/PNG)\n        \n        **Authentication Required**: Bearer token\
+        \ in Authorization header.\n        "
+      summary: Update User Profile
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+              examples:
+                UpdateSuccess:
+                  value:
+                    user:
+                      id: 1
+                      email: john.doe@example.com
+                      name: John Smith
+                      avatar: http://localhost:8000/media/avatars/john_smith.jpg
+                      date_joined: '2023-12-01T10:30:00Z'
+                      is_active: true
+                    message: Profile updated successfully.
+                  summary: Profile updated response
+                  description: Updated profile data
+          description: Profile updated successfully
+        '400':
+          description: Invalid input data
+  /api/v1/auth/profile/avatar/:
+    delete:
+      operationId: auth_profile_avatar_destroy
+      description: "\n        Remove the current authenticated user's profile avatar.\n\
+        \        \n        This will delete the avatar file from storage and reset\
+        \ the user's avatar field.\n        \n        **Authentication Required**:\
+        \ Bearer token in Authorization header.\n        "
+      summary: Delete User Avatar
+      tags:
+      - User Profile
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: Avatar deleted successfully
+        '400':
+          description: No avatar to delete
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register_create
+      description: "\n        Register a new user with email and password. \n    \
+        \    \n        This endpoint creates a new user account and returns JWT tokens\
+        \ for immediate authentication.\n        \n        **Rate Limit**: 5 requests\
+        \ per minute per IP address.\n        \n        **Validation Rules**:\n  \
+        \      - Email must be unique and valid format\n        - Password must be\
+        \ at least 8 characters\n        - Name is required and must be between 2-50\
+        \ characters\n        "
+      summary: User Registration
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+            examples:
+              ValidRegistration:
+                value:
+                  email: john.doe@example.com
+                  password: securepassword123
+                  name: John Doe
+                summary: Successful user registration
+                description: Example of a valid registration request
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+              examples:
+                RegistrationSuccess:
+                  value:
+                    user:
+                      id: 1
+                      email: john.doe@example.com
+                      name: John Doe
+                    tokens:
+                      access: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                      refresh: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                    message: User registered successfully.
+                  summary: Successful registration response
+                  description: User created with JWT tokens
+          description: User successfully registered
+        '400':
+          description: Invalid input data
+        '429':
+          description: Rate limit exceeded
+  /api/v1/auth/token/:
+    post:
+      operationId: auth_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/auth/token/refresh/:
+    post:
+      operationId: auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/auth/token/verify/:
+    post:
+      operationId: auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/events/:
+    get:
+      operationId: events_list
+      description: "\n        Retrieve a paginated list of all events with advanced\
+        \ filtering and search capabilities.\n        \n        **Features**:\n  \
+        \      - Full-text search across event titles and descriptions\n        -\
+        \ Filter by status (active, completed, cancelled)\n        - Filter by creator\n\
+        \        - Order by creation date, title, or start date\n        \n      \
+        \  **Permissions**: Available to all users (no authentication required).\n\
+        \        **Rate Limit**: 100 requests per minute per user.\n        "
+      summary: List Events
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEventListList'
+              examples:
+                EventsList:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - count: 25
+                      next: http://localhost:8000/api/v1/events/?page=2
+                      previous: null
+                      results:
+                      - id: 1
+                        title: Team Building Workshop
+                        description: Monthly team building activities
+                        created_by:
+                          id: 1
+                          name: John Doe
+                          email: john@example.com
+                        status: active
+                        created_at: '2023-12-01T10:30:00Z'
+                        timeslots_count: 3
+                        total_votes: 15
+                  summary: Sample events response
+                  description: Paginated list of events
+          description: List of events retrieved successfully
+    post:
+      operationId: events_create
+      description: "\n        Create a new community event with timeslots for voting.\n\
+        \        \n        **Required Fields**:\n        - title: Event name (3-200\
+        \ characters)\n        - description: Event details (optional)\n        -\
+        \ timeslots: Array of available time options\n        \n        **Authentication\
+        \ Required**: Bearer token in Authorization header.\n        **Rate Limit**:\
+        \ 20 requests per minute per user.\n        "
+      summary: Create Event
+      tags:
+      - Events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventCreateRequest'
+            examples:
+              CreateEvent:
+                value:
+                  title: Monthly Team Meeting
+                  description: Discussion of quarterly goals and updates
+                  timeslots:
+                  - start_time: '2024-01-15T14:00:00Z'
+                    end_time: '2024-01-15T15:30:00Z'
+                    description: Monday afternoon option
+                  - start_time: '2024-01-16T10:00:00Z'
+                    end_time: '2024-01-16T11:30:00Z'
+                    description: Tuesday morning option
+                summary: Create a new event
+                description: Example event creation request
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+              examples:
+                EventCreated:
+                  value:
+                    id: 1
+                    title: Monthly Team Meeting
+                    description: Discussion of quarterly goals and updates
+                    created_by:
+                      id: 1
+                      name: John Doe
+                      email: john@example.com
+                    status: active
+                    is_locked: false
+                    created_at: '2023-12-01T10:30:00Z'
+                    timeslots:
+                    - id: 1
+                      start_time: '2024-01-15T14:00:00Z'
+                      end_time: '2024-01-15T15:30:00Z'
+                      description: Monday afternoon option
+                      vote_count: 0
+                    - id: 2
+                      start_time: '2024-01-16T10:00:00Z'
+                      end_time: '2024-01-16T11:30:00Z'
+                      description: Tuesday morning option
+                      vote_count: 0
+                  summary: Successful event creation
+                  description: New event with generated ID
+          description: Event created successfully
+        '400':
+          description: Invalid event data
+  /api/v1/events/{event_slug}/tasks/:
+    get:
+      operationId: events_tasks_list
+      description: Get all tasks for a specific event. Only event members can view.
+      summary: List event tasks
+      parameters:
+      - in: query
+        name: assigned_to
+        schema:
+          type: integer
+        description: Filter tasks by assigned user ID
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter tasks by status (todo, doing, done)
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: events_tasks_create
+      description: Create a new task for a specific event. Only event members can
+        create tasks.
+      summary: Create event task
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskEventCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskEventCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskEventCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskEventCreate'
+          description: ''
+  /api/v1/events/{event_slug}/timeslots/:
+    get:
+      operationId: events_timeslots_list
+      description: Get all timeslots for a specific event.
+      summary: List event timeslots
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTimeSlotList'
+          description: ''
+    post:
+      operationId: events_timeslots_create
+      description: Add a new timeslot to an event. Only possible for draft events.
+      summary: Create timeslot
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSlot'
+          description: ''
+  /api/v1/events/{event_slug}/timeslots/{id}/:
+    get:
+      operationId: events_timeslots_retrieve
+      description: Get details of a specific timeslot.
+      summary: Get timeslot details
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSlot'
+          description: ''
+    put:
+      operationId: events_timeslots_update
+      description: Update a timeslot. Only possible for draft events.
+      summary: Update timeslot
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TimeSlotRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSlot'
+          description: ''
+    patch:
+      operationId: events_timeslots_partial_update
+      description: Partially update a timeslot. Only possible for draft events.
+      summary: Partially update timeslot
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeSlotRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeSlotRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeSlotRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSlot'
+          description: ''
+    delete:
+      operationId: events_timeslots_destroy
+      description: Delete a timeslot. Only possible for draft events.
+      summary: Delete timeslot
+      parameters:
+      - in: path
+        name: event_slug
+        schema:
+          type: string
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/events/{slug}/:
+    get:
+      operationId: events_retrieve
+      description: "\n        Retrieve detailed information about a specific event\
+        \ including all timeslots and voting data.\n        \n        **Includes**:\n\
+        \        - Complete event information\n        - All associated timeslots\n\
+        \        - Vote counts for each timeslot\n        - Creator information\n\
+        \        \n        **Permissions**: Available to all users.\n        "
+      summary: Get Event Details
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - Events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+          description: Event details retrieved successfully
+        '404':
+          description: Event not found
+    put:
+      operationId: events_update
+      description: "\n        Update an existing event completely.\n        \n   \
+        \     **Permissions**: Only the event creator can update their events.\n \
+        \       **Restrictions**: Cannot update locked events.\n        **Authentication\
+        \ Required**: Bearer token in Authorization header.\n        "
+      summary: Update Event
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - Events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EventUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EventUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+          description: Event updated successfully
+        '403':
+          description: Permission denied or event locked
+    patch:
+      operationId: events_partial_update
+      description: "\n        Update specific fields of an existing event.\n     \
+        \   \n        Only provided fields will be updated. Supports partial modifications.\n\
+        \        \n        **Permissions**: Only the event creator can update their\
+        \ events.\n        **Restrictions**: Cannot update locked events.\n      \
+        \  **Authentication Required**: Bearer token in Authorization header.\n  \
+        \      "
+      summary: Partially Update Event
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - Events
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedEventUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedEventUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedEventUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventUpdate'
+          description: ''
+    delete:
+      operationId: events_destroy
+      description: "\n        Permanently delete an event and all associated data.\n\
+        \        \n        **Warning**: This action cannot be undone. All timeslots\
+        \ and votes will be deleted.\n        \n        **Permissions**: Only the\
+        \ event creator can delete their events.\n        **Authentication Required**:\
+        \ Bearer token in Authorization header.\n        "
+      summary: Delete Event
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - Events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Event deleted successfully
+        '403':
+          description: Permission denied
+  /api/v1/events/{slug}/lock/:
+    post:
+      operationId: events_lock_create
+      description: Lock an event to prevent further modifications. Only the creator
+        can lock their events.
+      summary: Lock event
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - events
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventDetail'
+          description: ''
+  /api/v1/tasks/:
+    get:
+      operationId: tasks_list
+      description: Get a paginated list of tasks with filtering capabilities. Users
+        can only see tasks for events they are associated with.
+      summary: List tasks
+      parameters:
+      - in: query
+        name: assigned_to
+        schema:
+          type: integer
+        description: Filter tasks by assigned user ID
+      - in: query
+        name: event
+        schema:
+          type: integer
+        description: Filter tasks by event ID
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Search tasks by title
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: Filter tasks by status (todo, doing, done)
+      tags:
+      - tasks
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTaskList'
+          description: ''
+    post:
+      operationId: tasks_create
+      description: Create a new task. Only event members can create tasks.
+      summary: Create task
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskCreate'
+          description: ''
+  /api/v1/tasks/{id}/:
+    get:
+      operationId: tasks_retrieve
+      description: Get detailed information about a specific task. Only event members
+        can view.
+      summary: Get task details
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+          description: ''
+    put:
+      operationId: tasks_update
+      description: Update a task. Only the event creator or assigned user can update
+        tasks.
+      summary: Update task
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskUpdate'
+          description: ''
+    patch:
+      operationId: tasks_partial_update
+      description: Partially update a task. Only the event creator or assigned user
+        can update tasks.
+      summary: Partially update task
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTaskUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskUpdate'
+          description: ''
+    delete:
+      operationId: tasks_destroy
+      description: Delete a task. Only the event creator can delete tasks.
+      summary: Delete task
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Task.
+        required: true
+      tags:
+      - tasks
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/voting/events/{slug}/bulk_vote/:
+    post:
+      operationId: voting_events_bulk_vote_create
+      description: Vote for multiple timeslots in an event at once.
+      summary: Bulk vote for multiple timeslots
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/voting/events/{slug}/summary/:
+    get:
+      operationId: voting_events_summary_retrieve
+      description: Get comprehensive voting statistics for all timeslots in an event.
+      summary: Get event voting summary
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/voting/timeslots/{id}/summary/:
+    get:
+      operationId: voting_timeslots_summary_retrieve
+      description: Get detailed voting information for a specific timeslot including
+        vote count and voter list.
+      summary: Get voting summary for timeslot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Time Slot.
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/voting/timeslots/{id}/vote/:
+    post:
+      operationId: voting_timeslots_vote_create
+      description: Vote for a specific timeslot. If already voted, this will remove
+        the vote (toggle).
+      summary: Vote for timeslot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Time Slot.
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+    delete:
+      operationId: voting_timeslots_vote_destroy
+      description: Vote for a specific timeslot. If already voted, this will remove
+        the vote (toggle).
+      summary: Vote for timeslot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Time Slot.
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/voting/votes/:
+    get:
+      operationId: voting_votes_list
+      description: "\n        Retrieve all votes made by the current authenticated\
+        \ user across all events.\n        \n        **Features**:\n        - Filter\
+        \ by event ID\n        - Filter by timeslot ID\n        - Order by creation\
+        \ date\n        \n        **Authentication Required**: Bearer token in Authorization\
+        \ header.\n        **Rate Limit**: 100 requests per minute per user.\n   \
+        \     "
+      summary: List User's Votes
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - Voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedVoteList'
+              examples:
+                UserVotes:
+                  value:
+                    count: 123
+                    next: http://api.example.org/accounts/?page=4
+                    previous: http://api.example.org/accounts/?page=2
+                    results:
+                    - count: 5
+                      next: null
+                      previous: null
+                      results:
+                      - id: 1
+                        timeslot:
+                          id: 1
+                          start_time: '2024-01-15T14:00:00Z'
+                          end_time: '2024-01-15T16:00:00Z'
+                          description: Monday afternoon session
+                        event:
+                          id: 1
+                          title: Team Building Workshop
+                        created_at: '2023-12-01T10:30:00Z'
+                  summary: List of user votes
+                  description: All votes made by the current user
+          description: User votes retrieved successfully
+    post:
+      operationId: voting_votes_create
+      description: "\n        Vote for a specific timeslot in an event.\n        \n\
+        \        **Restrictions**:\n        - Users can only vote once per timeslot\n\
+        \        - Must be a member of the event to vote\n        - Event must allow\
+        \ voting (not locked)\n        \n        **Authentication Required**: Bearer\
+        \ token in Authorization header.\n        **Rate Limit**: 10 requests per\
+        \ minute per user.\n        "
+      summary: Create Vote
+      tags:
+      - Voting
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoteCreateRequest'
+            examples:
+              CreateVote:
+                value:
+                  timeslot: 1
+                summary: Vote for a timeslot
+                description: Vote for a specific timeslot
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VoteCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VoteCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+              examples:
+                VoteCreated:
+                  value:
+                    id: 1
+                    timeslot:
+                      id: 1
+                      start_time: '2024-01-15T14:00:00Z'
+                      end_time: '2024-01-15T16:00:00Z'
+                      description: Monday afternoon session
+                    event:
+                      id: 1
+                      title: Team Building Workshop
+                    created_at: '2023-12-01T10:30:00Z'
+                  summary: Successful vote creation
+                  description: Vote registered for timeslot
+          description: Vote created successfully
+        '400':
+          description: Invalid vote data or duplicate vote
+        '403':
+          description: Permission denied - not event member
+  /api/v1/voting/votes/{id}/:
+    get:
+      operationId: voting_votes_retrieve
+      description: |-
+        ViewSet for managing user votes.
+
+        Provides endpoints for:
+        - Listing current user's votes
+        - Creating new votes
+        - Removing existing votes
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+          description: ''
+    put:
+      operationId: voting_votes_update
+      description: |-
+        ViewSet for managing user votes.
+
+        Provides endpoints for:
+        - Listing current user's votes
+        - Creating new votes
+        - Removing existing votes
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+          description: ''
+    patch:
+      operationId: voting_votes_partial_update
+      description: |-
+        ViewSet for managing user votes.
+
+        Provides endpoints for:
+        - Listing current user's votes
+        - Creating new votes
+        - Removing existing votes
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vote'
+          description: ''
+    delete:
+      operationId: voting_votes_destroy
+      description: "\n        Remove an existing vote for a timeslot.\n        \n\
+        \        **Restrictions**:\n        - Users can only remove their own votes\n\
+        \        - Vote must exist and belong to the user\n        \n        **Authentication\
+        \ Required**: Bearer token in Authorization header.\n        **Rate Limit**:\
+        \ 10 requests per minute per user.\n        "
+      summary: Remove Vote
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - Voting
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: Vote removed successfully
+        '403':
+          description: Permission denied - not vote owner
+        '404':
+          description: Vote not found
+components:
+  schemas:
+    EventBasic:
+      type: object
+      description: Basic event serializer for task display.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          maxLength: 200
+          pattern: ^[-a-zA-Z0-9_]+$
+      required:
+      - id
+      - title
+    EventCreateRequest:
+      type: object
+      description: Serializer for event creation with validation.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        timeslots:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlotRequest'
+          writeOnly: true
+      required:
+      - title
+    EventDetail:
+      type: object
+      description: Serializer for detailed event view with all timeslots.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        description_html:
+          type: string
+          readOnly: true
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        status:
+          $ref: '#/components/schemas/StatusE49Enum'
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        timeslots:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - description_html
+      - id
+      - slug
+      - timeslots
+      - title
+      - updated_at
+    EventList:
+      type: object
+      description: Serializer for event listing with summary data.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        status:
+          $ref: '#/components/schemas/StatusE49Enum'
+        created_by:
+          allOf:
+          - $ref: '#/components/schemas/UserSummary'
+          readOnly: true
+        timeslot_count:
+          type: integer
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - slug
+      - timeslot_count
+      - title
+    EventUpdate:
+      type: object
+      description: Serializer for event updates (only by creator).
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+      required:
+      - title
+    EventUpdateRequest:
+      type: object
+      description: Serializer for event updates (only by creator).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+      required:
+      - title
+    PaginatedEventListList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EventList'
+    PaginatedTaskList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    PaginatedTimeSlotList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeSlot'
+    PaginatedVoteList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Vote'
+    PasswordChangeRequest:
+      type: object
+      description: Serializer for changing user password.
+      properties:
+        current_password:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 8
+        new_password_confirm:
+          type: string
+          minLength: 1
+      required:
+      - current_password
+      - new_password
+      - new_password_confirm
+    PatchedEventUpdateRequest:
+      type: object
+      description: Serializer for event updates (only by creator).
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+    PatchedTaskUpdateRequest:
+      type: object
+      description: Serializer for updating task status and assignment.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/Status13aEnum'
+        assigned_to:
+          type: integer
+          nullable: true
+    PatchedTimeSlotRequest:
+      type: object
+      description: Serializer for TimeSlot model with vote count integration.
+      properties:
+        datetime:
+          type: string
+          format: date-time
+    Status13aEnum:
+      enum:
+      - todo
+      - doing
+      - done
+      type: string
+      description: |-
+        * `todo` - To Do
+        * `doing` - Doing
+        * `done` - Done
+    StatusE49Enum:
+      enum:
+      - draft
+      - locked
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `locked` - Locked
+    Task:
+      type: object
+      description: Full task serializer for display with related data.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/Status13aEnum'
+        assigned_to:
+          allOf:
+          - $ref: '#/components/schemas/UserBasic'
+          readOnly: true
+        event:
+          allOf:
+          - $ref: '#/components/schemas/EventBasic'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assigned_to
+      - created_at
+      - event
+      - id
+      - title
+      - updated_at
+    TaskCreate:
+      type: object
+      description: Serializer for creating new tasks.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        event:
+          type: integer
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - event
+      - title
+    TaskCreateRequest:
+      type: object
+      description: Serializer for creating new tasks.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        event:
+          type: integer
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - event
+      - title
+    TaskEventCreate:
+      type: object
+      description: Serializer for creating tasks within a specific event context.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - title
+    TaskEventCreateRequest:
+      type: object
+      description: Serializer for creating tasks within a specific event context.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - title
+    TaskUpdate:
+      type: object
+      description: Serializer for updating task status and assignment.
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/Status13aEnum'
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - title
+    TaskUpdateRequest:
+      type: object
+      description: Serializer for updating task status and assignment.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+        status:
+          $ref: '#/components/schemas/Status13aEnum'
+        assigned_to:
+          type: integer
+          nullable: true
+      required:
+      - title
+    TimeSlot:
+      type: object
+      description: Serializer for TimeSlot model with vote count integration.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        datetime:
+          type: string
+          format: date-time
+        vote_count:
+          type: integer
+          readOnly: true
+        user_voted:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - datetime
+      - id
+      - user_voted
+      - vote_count
+    TimeSlotRequest:
+      type: object
+      description: Serializer for TimeSlot model with vote count integration.
+      properties:
+        datetime:
+          type: string
+          format: date-time
+      required:
+      - datetime
+    TimeslotBasic:
+      type: object
+      description: Basic serializer for timeslot information in votes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        datetime:
+          type: string
+          format: date-time
+          readOnly: true
+        event:
+          type: object
+          additionalProperties: {}
+          readOnly: true
+      required:
+      - datetime
+      - event
+      - id
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    UserBasic:
+      type: object
+      description: Basic user serializer for task assignments.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+      - email
+      - id
+    UserProfile:
+      type: object
+      description: Serializer for user profile data (excludes sensitive fields).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        avatar:
+          type: string
+          format: uri
+          nullable: true
+        avatar_url:
+          type: string
+          readOnly: true
+        date_joined:
+          type: string
+          format: date-time
+          readOnly: true
+        last_login:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+      required:
+      - avatar_url
+      - date_joined
+      - email
+      - id
+      - last_login
+    UserRegistration:
+      type: object
+      description: Serializer for user registration with email validation and password
+        confirmation.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        name:
+          type: string
+          maxLength: 150
+        tokens:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - id
+      - tokens
+    UserRegistrationRequest:
+      type: object
+      description: Serializer for user registration with email validation and password
+        confirmation.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        name:
+          type: string
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+      - password_confirm
+    UserSummary:
+      type: object
+      description: Serializer for user summary information.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+      - email
+      - id
+    UserVote:
+      type: object
+      description: Serializer for user information in votes.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+      required:
+      - email
+      - id
+      - name
+    Vote:
+      type: object
+      description: Serializer for vote display with user and timeslot info.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/UserVote'
+          readOnly: true
+        timeslot:
+          allOf:
+          - $ref: '#/components/schemas/TimeslotBasic'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - timeslot
+      - user
+    VoteCreateRequest:
+      type: object
+      description: Serializer for creating votes with validation.
+      properties:
+        timeslot:
+          type: integer
+      required:
+      - timeslot
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+servers:
+- url: http://localhost:8000
+  description: Development server
+- url: https://api.gatherhub.com
+  description: Production server
+tags:
+- name: Authentication
+  description: User registration, login, profile management, and JWT token operations
+- name: Events
+  description: Event creation, management, timeslot handling, and member management
+- name: Voting
+  description: Timeslot voting, vote management, and real-time vote updates
+- name: Tasks
+  description: Task creation, assignment, status tracking, and completion management
+externalDocs:
+  description: GatherHub Documentation
+  url: https://docs.gatherhub.com/

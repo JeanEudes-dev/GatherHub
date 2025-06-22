@@ -28,6 +28,22 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
+static/
+
+# Production files
+logs/
+.env.docker.prod
+README_old.md
+
+# Development files
+test_*.py
+*SUMMARY.md
+*IMPLEMENTATION.md
+TASK_*.md
+demo_*.py
+validate_*.py
+verify_*.py
+websocket_test.html
 
 # Environment variables
 .env

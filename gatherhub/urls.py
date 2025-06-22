@@ -18,16 +18,19 @@ urlpatterns = [
     # Admin
     path('admin/', admin.site.urls),
     
+    # Health checks
+    path('health/', include('apps.health.urls')),
+    
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
     
     # API endpoints
-    path('api/v1/auth/', include('accounts.urls')),
-    path('api/v1/events/', include('events.urls')),
-    path('api/v1/voting/', include('voting.urls')),
-    path('api/v1/tasks/', include('tasks.urls')),
+    path('api/v1/auth/', include('apps.accounts.urls')),
+    path('api/v1/events/', include('apps.events.urls')),
+    path('api/v1/voting/', include('apps.voting.urls')),
+    path('api/v1/tasks/', include('apps.tasks.urls')),
 ]
 
 # Serve media files in development

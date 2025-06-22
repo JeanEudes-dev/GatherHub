@@ -6,7 +6,7 @@ from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from drf_spectacular.utils import extend_schema_field
 
-from accounts.models import CustomUser
+from apps.accounts.models import CustomUser
 from .models import Event, TimeSlot
 
 

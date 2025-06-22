@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
 from .views import EventViewSet, TimeSlotViewSet
+from apps.tasks.views import EventTaskViewSet
 
 app_name = 'events'
 
@@ -22,4 +23,9 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='timeslot-detail'),
+    # Add task endpoints
+    path('<slug:event_slug>/tasks/', EventTaskViewSet.as_view({
+        'get': 'list',
+        'post': 'create'
+    }), name='task-list'),
 ]

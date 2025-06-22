@@ -4,8 +4,8 @@ from rest_framework import serializers
 from rest_framework.request import Request
 from drf_spectacular.utils import extend_schema_field
 
-from accounts.models import CustomUser
-from events.models import Event, TimeSlot
+from apps.accounts.models import CustomUser
+from apps.events.models import Event, TimeSlot
 from .models import Vote
 
 

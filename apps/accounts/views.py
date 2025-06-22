@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.contrib.auth import get_user_model
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample, OpenApiResponse
+from drf_spectacular.openapi import AutoSchema
 from .serializers import (
     UserRegistrationSerializer,
     UserProfileSerializer,
@@ -18,8 +19,86 @@ User = get_user_model()
 @extend_schema_view(
     post=extend_schema(
         summary="User Registration",
-        description="Register a new user with email and password. Returns user data and JWT tokens.",
-        tags=["Authentication"]
+        description="""
+        Register a new user with email and password. 
+        
+        This endpoint creates a new user account and returns JWT tokens for immediate authentication.
+        
+        **Rate Limit**: 5 requests per minute per IP address.
+        
+        **Validation Rules**:
+        - Email must be unique and valid format
+        - Password must be at least 8 characters
+        - Name is required and must be between 2-50 characters
+        """,
+        tags=["Authentication"],
+        examples=[
+            OpenApiExample(
+                'Valid Registration',
+                summary='Successful user registration',
+                description='Example of a valid registration request',
+                value={
+                    'email': 'john.doe@example.com',
+                    'password': 'securepassword123',
+                    'name': 'John Doe'
+                },
+                request_only=True,
+            ),
+        ],
+        responses={
+            201: OpenApiResponse(
+                response=UserRegistrationSerializer,
+                description='User successfully registered',
+                examples=[
+                    OpenApiExample(
+                        'Registration Success',
+                        summary='Successful registration response',
+                        description='User created with JWT tokens',
+                        value={
+                            'user': {
+                                'id': 1,
+                                'email': 'john.doe@example.com',
+                                'name': 'John Doe'
+                            },
+                            'tokens': {
+                                'access': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+                                'refresh': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                            },
+                            'message': 'User registered successfully.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid input data',
+                examples=[
+                    OpenApiExample(
+                        'Validation Error',
+                        summary='Invalid registration data',
+                        description='Example validation error response',
+                        value={
+                            'email': ['This field is required.'],
+                            'password': ['This password is too short. It must contain at least 8 characters.']
+                        }
+                    )
+                ]
+            ),
+            429: OpenApiResponse(
+                description='Rate limit exceeded',
+                examples=[
+                    OpenApiExample(
+                        'Rate Limit',
+                        summary='Too many registration attempts',
+                        description='Rate limit exceeded response',
+                        value={
+                            'error': 'Rate limit exceeded',
+                            'detail': 'Too many requests. Please try again later.',
+                            'type': 'auth'
+                        }
+                    )
+                ]
+            )
+        }
     )
 )
 class UserRegistrationView(APIView):
@@ -56,13 +135,111 @@ class UserRegistrationView(APIView):
 @extend_schema_view(
     get=extend_schema(
         summary="Get User Profile",
-        description="Get current authenticated user's profile information.",
-        tags=["User Profile"]
+        description="""
+        Retrieve the current authenticated user's profile information.
+        
+        Returns detailed user profile including avatar URL if available.
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        """,
+        tags=["User Profile"],
+        responses={
+            200: OpenApiResponse(
+                response=UserProfileSerializer,
+                description='User profile retrieved successfully',
+                examples=[
+                    OpenApiExample(
+                        'Profile Response',
+                        summary='User profile data',
+                        description='Complete user profile information',
+                        value={
+                            'id': 1,
+                            'email': 'john.doe@example.com',
+                            'name': 'John Doe',
+                            'avatar': 'http://localhost:8000/media/avatars/john_doe.jpg',
+                            'date_joined': '2023-12-01T10:30:00Z',
+                            'is_active': True
+                        }
+                    )
+                ]
+            ),
+            401: OpenApiResponse(
+                description='Authentication required',
+                examples=[
+                    OpenApiExample(
+                        'Unauthorized',
+                        summary='Missing or invalid token',
+                        description='Authentication credentials not provided',
+                        value={
+                            'detail': 'Authentication credentials were not provided.'
+                        }
+                    )
+                ]
+            )
+        }
     ),
     put=extend_schema(
         summary="Update User Profile",
-        description="Update current authenticated user's profile (name and avatar).",
-        tags=["User Profile"]
+        description="""
+        Update the current authenticated user's profile information.
+        
+        Supports partial updates - only provided fields will be updated.
+        
+        **Updatable Fields**:
+        - name: User's display name (2-50 characters)
+        - avatar: Profile image file (max 5MB, JPEG/PNG)
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        """,
+        tags=["User Profile"],
+        examples=[
+            OpenApiExample(
+                'Profile Update',
+                summary='Update user name',
+                description='Example of updating user profile',
+                value={
+                    'name': 'John Smith'
+                },
+                request_only=True,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response=UserProfileSerializer,
+                description='Profile updated successfully',
+                examples=[
+                    OpenApiExample(
+                        'Update Success',
+                        summary='Profile updated response',
+                        description='Updated profile data',
+                        value={
+                            'user': {
+                                'id': 1,
+                                'email': 'john.doe@example.com',
+                                'name': 'John Smith',
+                                'avatar': 'http://localhost:8000/media/avatars/john_smith.jpg',
+                                'date_joined': '2023-12-01T10:30:00Z',
+                                'is_active': True
+                            },
+                            'message': 'Profile updated successfully.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid input data',
+                examples=[
+                    OpenApiExample(
+                        'Validation Error',
+                        summary='Invalid profile data',
+                        description='Profile validation error',
+                        value={
+                            'name': ['This field may not be blank.']
+                        }
+                    )
+                ]
+            )
+        }
     )
 )
 class UserProfileView(APIView):
@@ -111,8 +288,42 @@ class UserProfileView(APIView):
 @extend_schema_view(
     delete=extend_schema(
         summary="Delete User Avatar",
-        description="Delete current authenticated user's avatar.",
-        tags=["User Profile"]
+        description="""
+        Remove the current authenticated user's profile avatar.
+        
+        This will delete the avatar file from storage and reset the user's avatar field.
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        """,
+        tags=["User Profile"],
+        responses={
+            200: OpenApiResponse(
+                description='Avatar deleted successfully',
+                examples=[
+                    OpenApiExample(
+                        'Delete Success',
+                        summary='Avatar removal confirmation',
+                        description='Avatar successfully deleted',
+                        value={
+                            'message': 'Avatar deleted successfully.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='No avatar to delete',
+                examples=[
+                    OpenApiExample(
+                        'No Avatar',
+                        summary='User has no avatar',
+                        description='No avatar file to delete',
+                        value={
+                            'message': 'No avatar to delete.'
+                        }
+                    )
+                ]
+            )
+        }
     )
 )
 class UserAvatarView(APIView):
@@ -142,8 +353,61 @@ class UserAvatarView(APIView):
 @extend_schema_view(
     post=extend_schema(
         summary="Change Password",
-        description="Change current authenticated user's password.",
-        tags=["Authentication"]
+        description="""
+        Change the current authenticated user's password.
+        
+        Requires the current password for verification and a new password that meets security requirements.
+        
+        **Security Requirements**:
+        - Current password must be provided and correct
+        - New password must be at least 8 characters
+        - New password cannot be the same as current password
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        **Rate Limit**: 5 requests per minute per user.
+        """,
+        tags=["Authentication"],
+        examples=[
+            OpenApiExample(
+                'Password Change',
+                summary='Change user password',
+                description='Example password change request',
+                value={
+                    'current_password': 'oldpassword123',
+                    'new_password': 'newpassword456'
+                },
+                request_only=True,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description='Password changed successfully',
+                examples=[
+                    OpenApiExample(
+                        'Change Success',
+                        summary='Password change confirmation',
+                        description='Password successfully updated',
+                        value={
+                            'message': 'Password changed successfully.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid password data',
+                examples=[
+                    OpenApiExample(
+                        'Invalid Password',
+                        summary='Password validation error',
+                        description='Current password incorrect or new password invalid',
+                        value={
+                            'current_password': ['Current password is incorrect.'],
+                            'new_password': ['This password is too short. It must contain at least 8 characters.']
+                        }
+                    )
+                ]
+            )
+        }
     )
 )
 class PasswordChangeView(APIView):

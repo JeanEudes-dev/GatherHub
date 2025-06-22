@@ -6,9 +6,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.serializers import BaseSerializer
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiExample, OpenApiResponse
+from drf_spectacular.openapi import AutoSchema
 
-from events.models import Event, TimeSlot
+from apps.events.models import Event, TimeSlot
 from .models import Vote
 from .serializers import (
     VoteSerializer,
@@ -27,17 +28,176 @@ from .permissions import (
 
 @extend_schema_view(
     list=extend_schema(
-        summary="List user's votes",
-        description="Get a list of all votes made by the current user across all events."
+        summary="List User's Votes",
+        description="""
+        Retrieve all votes made by the current authenticated user across all events.
+        
+        **Features**:
+        - Filter by event ID
+        - Filter by timeslot ID
+        - Order by creation date
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        **Rate Limit**: 100 requests per minute per user.
+        """,
+        tags=["Voting"],
+        responses={
+            200: OpenApiResponse(
+                response=VoteSerializer(many=True),
+                description='User votes retrieved successfully',
+                examples=[
+                    OpenApiExample(
+                        'User Votes',
+                        summary='List of user votes',
+                        description='All votes made by the current user',
+                        value={
+                            'count': 5,
+                            'next': None,
+                            'previous': None,
+                            'results': [
+                                {
+                                    'id': 1,
+                                    'timeslot': {
+                                        'id': 1,
+                                        'start_time': '2024-01-15T14:00:00Z',
+                                        'end_time': '2024-01-15T16:00:00Z',
+                                        'description': 'Monday afternoon session'
+                                    },
+                                    'event': {
+                                        'id': 1,
+                                        'title': 'Team Building Workshop'
+                                    },
+                                    'created_at': '2023-12-01T10:30:00Z'
+                                }
+                            ]
+                        }
+                    )
+                ]
+            )
+        }
     ),
     create=extend_schema(
-        summary="Create a vote",
-        description="Vote for a specific timeslot. Users can only vote once per timeslot."
+        summary="Create Vote",
+        description="""
+        Vote for a specific timeslot in an event.
+        
+        **Restrictions**:
+        - Users can only vote once per timeslot
+        - Must be a member of the event to vote
+        - Event must allow voting (not locked)
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        **Rate Limit**: 10 requests per minute per user.
+        """,
+        tags=["Voting"],
+        examples=[
+            OpenApiExample(
+                'Create Vote',
+                summary='Vote for a timeslot',
+                description='Vote for a specific timeslot',
+                value={
+                    'timeslot': 1
+                },
+                request_only=True,
+            ),
+        ],
+        responses={
+            201: OpenApiResponse(
+                response=VoteSerializer,
+                description='Vote created successfully',
+                examples=[
+                    OpenApiExample(
+                        'Vote Created',
+                        summary='Successful vote creation',
+                        description='Vote registered for timeslot',
+                        value={
+                            'id': 1,
+                            'timeslot': {
+                                'id': 1,
+                                'start_time': '2024-01-15T14:00:00Z',
+                                'end_time': '2024-01-15T16:00:00Z',
+                                'description': 'Monday afternoon session'
+                            },
+                            'event': {
+                                'id': 1,
+                                'title': 'Team Building Workshop'
+                            },
+                            'created_at': '2023-12-01T10:30:00Z'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid vote data or duplicate vote',
+                examples=[
+                    OpenApiExample(
+                        'Duplicate Vote',
+                        summary='User already voted for this timeslot',
+                        description='Attempt to vote twice on same timeslot',
+                        value={
+                            'non_field_errors': ['You have already voted for this timeslot.']
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description='Permission denied - not event member',
+                examples=[
+                    OpenApiExample(
+                        'Not Event Member',
+                        summary='User not allowed to vote',
+                        description='User is not a member of the event',
+                        value={
+                            'detail': 'You must be a member of this event to vote.'
+                        }
+                    )
+                ]
+            )
+        }
     ),
     destroy=extend_schema(
-        summary="Remove a vote",
-        description="Remove a vote for a timeslot. Users can only remove their own votes."
-    )
+        summary="Remove Vote",
+        description="""
+        Remove an existing vote for a timeslot.
+        
+        **Restrictions**:
+        - Users can only remove their own votes
+        - Vote must exist and belong to the user
+        
+        **Authentication Required**: Bearer token in Authorization header.
+        **Rate Limit**: 10 requests per minute per user.
+        """,
+        tags=["Voting"],
+        responses={
+            204: OpenApiResponse(description='Vote removed successfully'),
+            403: OpenApiResponse(
+                description='Permission denied - not vote owner',
+                examples=[
+                    OpenApiExample(
+                        'Not Vote Owner',
+                        summary='Cannot remove others votes',
+                        description='User trying to remove someone elses vote',
+                        value={
+                            'detail': 'You can only remove your own votes.'
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description='Vote not found',
+                examples=[
+                    OpenApiExample(
+                        'Vote Not Found',
+                        summary='Invalid vote ID',
+                        description='Vote does not exist',
+                        value={
+                            'detail': 'Not found.'
+                        }
+                    )
+                ]
+            )
+        }
+    ),
 )
 class VoteViewSet(viewsets.ModelViewSet):
     """

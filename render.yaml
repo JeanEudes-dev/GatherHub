@@ -1,0 +1,54 @@
+services:
+  # Main Django application
+  - type: web
+    name: gatherhub-backend
+    env: python
+    buildCommand: |
+      pip install --upgrade pip
+      pip install -r requirements.prod.txt
+      python manage.py collectstatic --noinput
+      python manage.py migrate
+    startCommand: |
+      gunicorn --bind 0.0.0.0:$PORT --workers 3 --worker-class uvicorn.workers.UvicornWorker gatherhub.asgi:application
+    healthCheckPath: /health/
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: gatherhub.settings.render
+      - key: DEBUG
+        value: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        fromService:
+          type: web
+          name: gatherhub-backend
+          property: host
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gatherhub-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: gatherhub-redis
+          property: connectionString
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://your-frontend-domain.com
+      - key: CSRF_TRUSTED_ORIGINS
+        fromService:
+          type: web
+          name: gatherhub-backend
+          property: host
+
+  # PostgreSQL Database
+  - type: database
+    name: gatherhub-db
+    databaseName: gatherhub
+    user: gatherhub
+    plan: starter
+
+  # Redis Cache
+  - type: redis
+    name: gatherhub-redis
+    plan: starter
+    maxmemoryPolicy: allkeys-lru

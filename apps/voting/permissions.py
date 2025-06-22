@@ -1,7 +1,7 @@
 from django.utils import timezone
 from rest_framework import permissions
 
-from events.models import Event, TimeSlot
+from apps.events.models import Event, TimeSlot
 from .models import Vote
 
 
