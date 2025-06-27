@@ -1,7 +1,9 @@
 import React, { ReactNode, useEffect } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { Button } from '../ui/button'; // Assuming shadcn/ui button
+import { initializeWebSockets, closeWebSockets } from '../../services/websocketService';
+import { motion } from 'framer-motion';
 
 // Placeholder for AuroraBackground component - to be created later
 const AuroraBackground = () => {
@@ -46,6 +48,7 @@ const AuroraBackground = () => {
 const Layout: React.FC = () => {
   const { isAuthenticated, user, logout, fetchProfile, accessToken } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation(); // Get location for AnimatePresence key or motion key
 
   useEffect(() => {
     // If there's a token but no user data, fetch profile (e.g., after page refresh and rehydration)
@@ -53,12 +56,32 @@ const Layout: React.FC = () => {
       fetchProfile().catch(error => {
         console.error("Failed to fetch profile on layout mount:", error);
         // If profile fetch fails (e.g. token expired), logout
-        logout();
+        if (error.response?.status === 401) {
+          logout(); // This will also trigger WS close via the other useEffect
+        }
       });
     }
   }, [accessToken, user, fetchProfile, logout]);
 
+  useEffect(() => {
+    // Manage WebSocket connection based on authentication state
+    if (isAuthenticated() && user) { // Ensure user object is also present
+      console.log("Layout: User authenticated, initializing WebSockets.");
+      initializeWebSockets();
+    } else {
+      console.log("Layout: User not authenticated or user object missing, closing WebSockets.");
+      closeWebSockets();
+    }
+
+    // Cleanup function for when the Layout component unmounts or auth state changes to non-authed
+    return () => {
+      console.log("Layout: Cleaning up WebSockets.");
+      closeWebSockets();
+    };
+  }, [isAuthenticated, user]); // Depend on user object as well to ensure it's loaded
+
   const handleLogout = async () => {
+    // closeWebSockets() will be called by the useEffect above when isAuthenticated becomes false
     await logout();
     navigate('/login');
   };
@@ -69,15 +92,13 @@ const Layout: React.FC = () => {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="container flex h-14 max-w-screen-2xl items-center justify-between px-4 md:px-6">
           <Link to="/" className="mr-6 flex items-center space-x-2">
-            {/* <Icons.logo className="h-6 w-6" /> */}
             <span className="font-bold sm:inline-block text-lg">
               {import.meta.env.VITE_APP_NAME || 'GatherHub'}
             </span>
           </Link>
 
           <div className="flex items-center gap-4">
-            <Link to="/" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Events</Link>
-            {/* Add other navigation links here as needed */}
+            <Link to="/events" className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary">Events</Link>
           </div>
 
           <div className="flex items-center gap-2">
@@ -101,9 +122,16 @@ const Layout: React.FC = () => {
         </nav>
       </header>
 
-      <main className="flex-grow container max-w-screen-2xl mx-auto px-4 py-8 md:px-6 z-10">
+      <motion.main
+        key={location.pathname} // Trigger animation on route change
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.3 }}
+        className="flex-grow container max-w-screen-2xl mx-auto px-4 py-8 md:px-6 z-10"
+      >
         <Outlet /> {/* Child routes will render here */}
-      </main>
+      </motion.main>
 
       <footer className="py-6 md:px-8 md:py-0 border-t border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-10">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
