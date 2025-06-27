@@ -5,6 +5,10 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import EventListPage from './pages/EventListPage';
+import CreateEventPage from './pages/CreateEventPage';
+import EditEventPage from './pages/EditEventPage';
+import EventDetailPage from './pages/EventDetailPage';
 import { useAuthStore, rehydrateAuth } from './store/authStore';
 // import { Toaster } from 'sonner'; // If using sonner for toasts
 
@@ -65,12 +69,16 @@ function App() {
           {/* Protected Routes */}
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
-            {/* Add other protected routes here: /events, /tasks, /voting, etc. */}
-            {/* Example: */}
-            {/* <Route path="/events" element={<EventListPage />} /> */}
-            {/* <Route path="/events/new" element={<CreateEventPage />} /> */}
-            {/* <Route path="/events/:id" element={<EventDetailPage />} /> */}
+            <Route path="/events/new" element={<CreateEventPage />} />
+            <Route path="/events/edit/:eventId" element={<EditEventPage />} />
+            {/* Add other protected routes here for tasks, voting specific actions if needed */}
           </Route>
+
+          {/* Event routes that can be public or protected based on content */}
+          {/* Listing events is often public */}
+          <Route path="/events" element={<EventListPage />} />
+          {/* Event detail can be public, actions within might be protected by component logic */}
+          <Route path="/events/:eventId" element={<EventDetailPage />} />
 
           {/* Catch-all for 404 Not Found (Optional) */}
           <Route path="*" element={<div><h2>404 Not Found</h2><Link to="/">Go Home</Link></div>} />
