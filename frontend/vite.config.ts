@@ -4,6 +4,7 @@ import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: '/static/', // Adjust the base path for Render deployment
   plugins: [react()],
   resolve: {
     alias: {
