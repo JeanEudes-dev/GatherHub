@@ -20,24 +20,10 @@ services:
         generateValue: true
       - key: ALLOWED_HOSTS
         value: gatherhub-backend.onrender.com, gatherhub-frontend.onrender.com
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: gatherhub-redis
-          property: connectionString
       - key: CORS_ALLOWED_ORIGINS
         value: https://gatherhub-frontend.onrender.com, https://gatherhub-backend.onrender.com
       - key: CSRF_TRUSTED_ORIGINS
         value: https://gatherhub-frontend.onrender.com, https://gatherhub-backend.onrender.com
-
-  # Redis Cache
-  - type: redis
-    name: gatherhub-redis
-    plan: starter
-    maxmemoryPolicy: allkeys-lru
-    ipAllowList:
-      - source: 0.0.0.0/0
-        description: Allow all (for testing; restrict in production)
 
   # Frontend Service
   - type: web

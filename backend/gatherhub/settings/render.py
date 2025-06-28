@@ -44,41 +44,16 @@ else:
         }
     }
 
-# Redis configuration
-REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-
-# Cache configuration
+# Use in-memory cache for free tier
 CACHES = {
     'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'CONNECTION_POOL_KWARGS': {
-                'max_connections': 20,
-                'retry_on_timeout': True,
-            },
-        },
-        'KEY_PREFIX': 'gatherhub',
-        'TIMEOUT': 300,
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-gatherhub',
     }
 }
 
-# Session configuration
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
-
-# Channels configuration for WebSockets
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [REDIS_URL],
-            'capacity': 1500,
-            'expiry': 60,
-        },
-    },
-}
+# Use database-backed sessions (default)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Static files configuration (override base settings)
 STATIC_URL = '/static/'
