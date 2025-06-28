@@ -1,288 +1,293 @@
 # GatherHub Frontend
 
-A modern, production-grade React frontend for GatherHub built with Vite, TypeScript, and Tailwind CSS. Features a stunning aurora/glassmorphism design system with smooth animations and responsive layouts.
+Welcome to the GatherHub Frontend! This application provides a modern, intuitive, and responsive user interface for interacting with the GatherHub platform. Built with cutting-edge technologies, it features a stunning aurora/glassmorphism design system, smooth animations, and a focus on user experience.
+
+## 🌟 Project Overview
+
+The GatherHub frontend is a single-page application (SPA) that allows users to:
+- Discover, create, and manage community events.
+- Collaborate on event-related tasks.
+- Participate in polls and voting for collective decision-making.
+- Manage their user profile and settings.
+- Receive real-time updates for events, tasks, and votes.
+
+It communicates with the GatherHub backend API for data persistence and real-time functionalities via WebSockets.
 
 ## 🚀 Tech Stack
 
-- **React 19** - Latest React with modern features
-- **Vite 6** - Lightning-fast development and build tool
-- **TypeScript** - Type-safe development
-- **Tailwind CSS 3.4** - Utility-first CSS framework
-- **shadcn/ui** - Beautiful, accessible UI components
-- **Framer Motion** - Smooth animations and transitions
-- **Zustand** - Lightweight state management
-- **Axios** - HTTP client for API requests
-- **Lucide React** - Beautiful icons
+- **React 19**: Leverages the latest features of React for building dynamic user interfaces.
+- **Vite 6**: Provides a lightning-fast development server and optimized build process.
+- **TypeScript**: Ensures type safety and improves code maintainability.
+- **Tailwind CSS 3.4**: A utility-first CSS framework for rapid UI development.
+- **shadcn/ui**: A collection of beautifully designed, accessible UI components.
+- **Framer Motion**: Powers smooth animations and transitions throughout the application.
+- **Zustand**: A lightweight and flexible state management solution.
+- **React Router DOM v6**: Handles client-side routing and navigation.
+- **Axios**: A promise-based HTTP client for making API requests.
+- **Lucide React**: A comprehensive library of beautiful and consistent icons.
+- **React Hot Toast**: Provides elegant notifications.
 
-## 🎨 Design System
+## 🎨 Design System & Styling
 
-The frontend features a modern aurora/glassmorphism design system with:
+The frontend features a modern aurora/glassmorphism design:
+- **Aurora Background**: Animated gradient orbs create a visually appealing backdrop.
+- **Glassmorphism**: Translucent elements with blur effects give a sense of depth.
+- **Neon Accents**: Glowing interactive elements enhance user engagement.
+- **Responsive Design**: A mobile-first approach ensures seamless experience across all devices.
+- **Dark Theme**: Optimized for dark mode interfaces, providing visual comfort.
 
-- **Aurora Background**: Animated gradient orbs with smooth transitions
-- **Glassmorphism**: Translucent cards with backdrop blur effects
-- **Neon Accents**: Glowing buttons and interactive elements
-- **Responsive Design**: Mobile-first, fully responsive layouts
-- **Dark Theme**: Optimized for dark mode interfaces
-
-### Color Palette
-
-```css
-/* Aurora Colors */
---aurora-blue: #60a5fa --aurora-purple: #a855f7 --aurora-pink: #ec4899
-  --aurora-green: #10b981 --aurora-yellow: #f59e0b --aurora-red: #ef4444;
-```
+### Styling Approach
+- **Tailwind CSS**: The primary method for styling. Utility classes are used extensively for building layouts and components. See `tailwind.config.js` for configuration.
+- **Custom CSS**: Global styles, custom utility classes, and aurora/glass effects are defined in `src/styles/globals.css` and `src/index.css`.
+  - Key custom classes include `.glass-card`, `.btn-aurora`, `.shadow-aurora`, etc.
+- **shadcn/ui Theme**: Components from `shadcn/ui` are themed to match the GatherHub design system. Configuration can be found in `components.json` and related CSS variables.
 
 ## 📁 Project Structure
 
+The `src` directory is organized as follows:
+
 ```
-frontend/
-├── public/                 # Static assets
-├── src/
-│   ├── assets/            # Images, fonts, etc.
-│   ├── components/        # Reusable components
-│   │   ├── ui/           # shadcn/ui components
-│   │   └── layout/       # Layout components
-│   ├── features/         # Feature-specific components
-│   │   ├── auth/         # Authentication
-│   │   ├── events/       # Event management
-│   │   ├── tasks/        # Task management
-│   │   └── voting/       # Voting system
-│   ├── hooks/            # Custom React hooks
-│   ├── lib/              # Utilities and helpers
-│   ├── pages/            # Page components
-│   ├── services/         # API services
-│   ├── store/            # State management
-│   ├── styles/           # Global styles
-│   └── types/            # TypeScript definitions
-├── .env.example          # Environment variables template
-├── .env.local           # Local environment variables
-├── components.json      # shadcn/ui configuration
-├── tailwind.config.js   # Tailwind configuration
-├── vite.config.ts       # Vite configuration
-└── package.json         # Dependencies and scripts
+src/
+├── assets/            # Static assets like images, fonts.
+├── components/        # Shared, reusable UI components.
+│   ├── layout/       # Components defining the overall page structure (e.g., Navbar, Footer, Layout).
+│   └── ui/           # Generic UI elements, often customized versions of shadcn/ui components or base elements.
+├── features/         # Components specific to a particular feature or domain.
+│   ├── auth/         # Authentication-related components (e.g., LoginForm, RegisterForm).
+│   ├── events/       # Event-specific components (e.g., EventCard, EventForm).
+│   ├── tasks/        # Task management components.
+│   └── voting/       # Voting and polling components.
+├── hooks/            # Custom React hooks for reusable logic.
+├── lib/              # Utility functions, constants, and helper modules.
+│   ├── constants.ts  # Application-wide constants.
+│   └── utils.ts      # General utility functions.
+├── pages/            # Top-level components representing application pages/routes.
+├── services/         # Modules responsible for API communication.
+│   ├── authService.ts
+│   ├── eventService.ts
+│   ├── taskService.ts
+│   ├── votingService.ts
+│   └── websocketService.ts # Handles WebSocket connections and messages.
+├── store/            # Zustand state management stores.
+│   ├── authStore.ts
+│   ├── eventStore.ts
+│   ├── taskStore.ts
+│   └── votingStore.ts
+├── styles/           # Global stylesheets and Tailwind CSS base.
+│   └── globals.css
+├── types/            # TypeScript type definitions and interfaces.
+│   └── index.ts      # Main export for types.
+├── App.tsx           # Main application component, sets up routing.
+├── main.tsx          # Entry point of the application.
+└── index.css         # Root CSS file, imports global styles.
 ```
 
-## 🛠️ Development
+## 🛠️ Development Setup
 
 ### Prerequisites
 
 - Node.js 18+ (recommended: 20+)
-- npm or yarn
+- npm or yarn (this guide uses npm)
 
 ### Quick Start
 
-1. **Install dependencies**
+1.  **Clone the repository** (if you haven't already):
+    ```bash
+    git clone https://github.com/JeanEudes-dev/GatherHub.git
+    cd GatherHub/frontend
+    ```
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Configure Environment Variables**:
+    Copy the `.env.example` file to a new file named `.env.local` in the `frontend` directory:
+    ```bash
+    cp .env.example .env.local
+    ```
+    Update `.env.local` with your backend API URL and WebSocket URL:
+    ```env
+    VITE_API_BASE_URL=http://localhost:8000/api/v1
+    VITE_WS_URL=ws://localhost:8000/ws
+    VITE_APP_NAME=GatherHub
+    ```
+    (Adjust if your backend runs on a different port or path)
 
-   ```bash
-   npm install
-   ```
-
-2. **Start development server**
-
-   ```bash
-   npm run dev
-   ```
-
-3. **Open browser**
-   Navigate to `http://localhost:5173`
+4.  **Start the development server**:
+    ```bash
+    npm run dev
+    ```
+5.  **Open your browser** and navigate to `http://localhost:5173` (or the port Vite assigns).
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Fix ESLint issues
-- `npm run format` - Format code with Prettier
-- `npm run type-check` - Run TypeScript type checking
+- `npm run dev`: Starts the development server with Hot Module Replacement (HMR).
+- `npm run build`: Builds the application for production in the `dist/` directory.
+- `npm run preview`: Serves the production build locally for previewing.
+- `npm run lint`: Lints the codebase using ESLint.
+- `npm run lint:fix`: Automatically fixes ESLint errors and warnings.
+- `npm run format`: Formats the code using Prettier.
+- `npm run type-check`: Runs TypeScript type checking.
 
-## 🏗️ Building
+## 🧩 Component Library
 
-### Development Build
+GatherHub Frontend utilizes `shadcn/ui` for its base component library, providing beautiful, accessible, and customizable components.
 
+### Using shadcn/ui Components
+- Components are added via the `shadcn-ui` CLI.
+- They are typically stored in `src/components/ui/`.
+- These components are highly composable and can be styled using Tailwind CSS.
+
+**To add a new `shadcn/ui` component:**
 ```bash
-npm run dev
+npx shadcn-ui@latest add [component-name]
 ```
-
-### Production Build
-
-```bash
-npm run build
-npm run preview
-```
-
-The build outputs to the `dist/` directory and is optimized for production with:
-
-- Code splitting
-- Tree shaking
-- Minification
-- Asset optimization
-
-## 🧩 Adding Components
-
-### Using shadcn/ui
-
-Add new shadcn/ui components:
-
-```bash
-npx shadcn@latest add [component-name]
-```
-
-Example:
-
-```bash
-npx shadcn@latest add dialog
-npx shadcn@latest add form
-npx shadcn@latest add table
-```
+Example: `npx shadcn-ui@latest add button card dialog`
 
 ### Custom Components
+- **Shared Components**: Reusable components not specific to any single feature are placed in `src/components/ui/` (for general UI elements) or `src/components/layout/` (for structural elements).
+- **Feature-Specific Components**: Components tied to a particular domain (e.g., event creation, task display) reside within the respective `src/features/[featureName]/` directory. This promotes modularity and co-location of feature-specific logic and UI.
 
-Create components in the appropriate directory:
+When creating custom components, prioritize reusability, accessibility, and adherence to the established design system.
 
-- `src/components/ui/` - Reusable UI components
-- `src/components/layout/` - Layout components
-- `src/features/[feature]/` - Feature-specific components
+## ⚙️ Routing
 
-## 🎯 State Management
+Client-side routing is managed by **React Router DOM v6**.
+- **Configuration**: Routes are defined in `src/App.tsx`.
+- **Layouts**: A primary `<Layout />` component in `src/components/layout/` wraps page views, providing consistent navigation and structure.
+- **Protected Routes**: The `<ProtectedRoute />` component in `src/App.tsx` handles authentication checks for routes requiring a logged-in user.
+- **Page Components**: Each route typically maps to a component in the `src/pages/` directory.
 
-The project uses Zustand for state management. Create stores in `src/store/`:
-
-```typescript
-import { create } from 'zustand'
-
-interface AuthState {
-  user: User | null
-  login: (user: User) => void
-  logout: () => void
-}
-
-export const useAuthStore = create<AuthState>(set => ({
-  user: null,
-  login: user => set({ user }),
-  logout: () => set({ user: null }),
-}))
+Example of a route definition in `App.tsx`:
+```tsx
+<Route path="/events" element={<EventListPage />} />
+<Route element={<ProtectedRoute />}>
+  <Route path="/profile" element={<ProfilePage />} />
+</Route>
 ```
+
+## 🎯 State Management with Zustand
+
+Zustand is used for global state management, offering a simple and unopinionated way to manage application state.
+
+### Store Structure
+- Stores are located in the `src/store/` directory (e.g., `authStore.ts`, `eventStore.ts`).
+- Each store is created using Zustand's `create` function.
+- Stores typically define:
+    - **State**: The data held by the store.
+    - **Actions**: Functions that modify the state.
+    - **Selectors**: (Often implicitly part of the hook) Functions to access parts of the state.
+
+### Using Stores in Components
+Import the store's hook into your component to access state and actions:
+```tsx
+import { useAuthStore } from '../store/authStore';
+
+function MyComponent() {
+  const { user, login, logout } = useAuthStore();
+
+  // Use state: user
+  // Call actions: login(userData), logout()
+}
+```
+
+### Persisting State
+For state that needs to persist across sessions (like authentication status), Zustand's `persist` middleware can be used, often in conjunction with `localStorage`. The `authStore.ts` demonstrates this for rehydrating authentication state.
 
 ## 🌐 API Integration
 
-API services are located in `src/services/`. Use Axios for HTTP requests:
+Communication with the GatherHub backend API is handled through services defined in the `src/services/` directory.
 
+- **Axios**: Used as the HTTP client. A pre-configured Axios instance can be found (or created) for base URL and request/response interceptors (e.g., for attaching JWT tokens).
+- **Service Modules**: Each module (e.g., `eventService.ts`) groups API calls related to a specific resource.
+- **Environment Variables**: The API base URL is configured via `VITE_API_BASE_URL` in `.env.local`.
+
+Example of a service function in `src/services/eventService.ts`:
 ```typescript
-import axios from 'axios'
+import axios from 'axios'; // Or a pre-configured instance
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-})
+// Example: If VITE_API_BASE_URL is 'http://localhost:8000/api/v1'
+// then API_URL will be 'http://localhost:8000/api/v1/events'
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/events`;
 
 export const eventService = {
-  getEvents: () => api.get('/events'),
-  createEvent: (data: CreateEventData) => api.post('/events', data),
-}
+  getEvents: async () => {
+    const response = await axios.get(API_URL);
+    return response.data;
+  },
+  createEvent: async (data: CreateEventData) => {
+    const response = await axios.post(API_URL, data);
+    return response.data;
+  },
+};
 ```
 
-## 🎨 Styling Guidelines
+## 🔌 Real-time Features with WebSockets
 
-### Tailwind CSS
+The frontend uses WebSockets for real-time communication with the backend (e.g., live updates for events, tasks, votes).
+- **Setup**: `websocketService.ts` in `src/services/` manages WebSocket connections.
+- **URL**: The WebSocket URL is configured via `VITE_WS_URL` in `.env.local`.
+- **Integration**: Stores (like `eventStore.ts`) or components can subscribe to WebSocket messages to update the UI in real-time.
 
-Use Tailwind utility classes for styling:
+## 🏗️ Building for Production
 
-```tsx
-<div className="glass-card shadow-aurora rounded-xl p-6">
-  <h2 className="mb-4 text-2xl font-bold text-white">Title</h2>
-  <p className="text-gray-300">Content</p>
-</div>
-```
-
-### Custom CSS Classes
-
-Custom utilities are defined in `src/styles/globals.css`:
-
-- `.glass-card` - Glassmorphism card effect
-- `.btn-aurora` - Aurora-styled button
-- `.btn-glass` - Glass-styled button
-- `.shadow-aurora` - Aurora glow shadow
-- `.animate-aurora` - Aurora animation
-
-## 🔧 Configuration
-
-### Environment Variables
-
-Copy `.env.example` to `.env.local` and configure:
-
-```env
-VITE_API_BASE_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000/ws
-VITE_APP_NAME=GatherHub
-```
-
-## 📱 Responsive Design
-
-The application is mobile-first and responsive:
-
-- **Mobile**: 320px - 768px
-- **Tablet**: 768px - 1024px
-- **Desktop**: 1024px+
-
-Use Tailwind responsive prefixes:
-
-```tsx
-<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-  {/* Responsive grid */}
-</div>
-```
-
-## ♿ Accessibility
-
-- Semantic HTML elements
-- ARIA attributes
-- Keyboard navigation
-- Screen reader support
-- High contrast mode
-- Focus management
-
-## 🚀 Performance
-
-### Optimization Features
-
-- **Code Splitting**: Automatic route-based splitting
-- **Tree Shaking**: Dead code elimination
-- **Asset Optimization**: Image and font optimization
-- **Lazy Loading**: Component lazy loading
-- **Memoization**: React.memo and useMemo
-
-## 🔄 Integration with Backend
-
-The frontend is designed to integrate with the Django backend:
-
-- **API**: RESTful API communication
-- **WebSocket**: Real-time updates
-- **Authentication**: JWT token-based auth
-- **File Upload**: Media handling
-
-## 📦 Deployment
-
-### Build for Production
-
+To build the application for production:
 ```bash
 npm run build
 ```
+This command bundles the application, optimizes assets, and outputs the static files to the `dist/` directory.
 
-### Deployment Options
+To preview the production build locally:
+```bash
+npm run preview
+```
 
-1. **Static Hosting** (Vercel, Netlify)
-2. **CDN** (Cloudflare, AWS CloudFront)
-3. **Docker** (with nginx)
-4. **Server** (Express.js, nginx)
+## 🚀 Performance Optimization
+
+Several strategies are employed to ensure optimal performance:
+- **Code Splitting**: Vite automatically splits code by routes (dynamic imports for pages).
+- **Tree Shaking**: Unused code is eliminated during the build process.
+- **Asset Optimization**: Images and other assets are optimized.
+- **Lazy Loading**: React.lazy and Suspense can be used for components that are not immediately needed.
+- **Memoization**: `React.memo`, `useMemo`, and `useCallback` are used where appropriate to prevent unnecessary re-renders.
+
+## ♿ Accessibility (A11y)
+
+Accessibility is a priority. We strive to follow WCAG guidelines by:
+- Using semantic HTML elements.
+- Ensuring proper ARIA attributes where necessary.
+- Providing keyboard navigation.
+- Testing with screen readers.
+- Maintaining good color contrast (though the aurora/glassmorphism design needs careful attention here).
+- Managing focus for interactive elements.
+`shadcn/ui` components are built with accessibility in mind.
+
+## 🔄 Integration with Backend
+
+- **API Endpoints**: The frontend consumes RESTful API endpoints provided by the Django backend.
+- **Authentication**: JWT (JSON Web Tokens) are used for authentication. Tokens are stored securely (e.g., in `localStorage`) and sent with API requests. Token refresh mechanisms are handled by `authStore` and `authService`.
+- **Data Flow**: Typically, components request data via service functions, which make API calls. State is updated in Zustand stores, and components re-render with new data.
+
+## 📦 Deployment
+
+The production build in the `dist/` directory consists of static assets and can be deployed to various platforms:
+1.  **Static Hosting Services**: Vercel, Netlify, GitHub Pages.
+2.  **CDN**: AWS CloudFront, Cloudflare.
+3.  **Docker**: Containerize with a web server like Nginx to serve static files.
+4.  **Traditional Web Server**: Serve the `dist/` folder using Nginx or Apache.
 
 ## 🤝 Contributing
 
-1. Follow the established code style
-2. Use TypeScript for type safety
-3. Write meaningful component names
-4. Test your changes
-5. Update documentation
+Contributions are welcome! Please adhere to the following guidelines:
+1.  Follow the established code style (ESLint, Prettier).
+2.  Use TypeScript for all new code.
+3.  Write clear, concise, and well-documented code.
+4.  Ensure components are reusable and accessible.
+5.  Test your changes thoroughly.
+6.  Update documentation if your changes affect existing functionality or add new features.
+7.  Create an issue to discuss significant changes before starting work.
 
 ---
 
-**Built with ❤️ using modern web technologies**
+**Built with ❤️ and modern web technologies to bring communities together.**
+If you have questions or encounter issues, please raise them on the project's GitHub Issues page.
