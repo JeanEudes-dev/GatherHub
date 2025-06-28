@@ -36,19 +36,11 @@ if DATABASE_URL and dj_database_url:
         )
     }
 else:
-    # Fallback database configuration
+    # Fallback database configuration: use SQLite for Render if no DATABASE_URL
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DATABASE_NAME', 'gatherhub'),
-            'USER': os.environ.get('DATABASE_USER', 'gatherhub'),
-            'PASSWORD': os.environ.get('DATABASE_PASSWORD', ''),
-            'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
-            'PORT': os.environ.get('DATABASE_PORT', '5432'),
-            'CONN_MAX_AGE': 600,
-            'OPTIONS': {
-                'sslmode': 'require',
-            },
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
         }
     }
 
