@@ -1,44 +1,65 @@
-import React from 'react';
-import { Vote } from '../../services/votingService';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Users, Clock, CheckSquare, PieChart } from 'lucide-react'; // Icons
+import React from 'react'
+import type { Vote } from '../../services/votingService'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../../components/ui/card'
+import { Button } from '../../components/ui/button'
+import { Users, Clock, CheckSquare, PieChart } from 'lucide-react' // Icons
 
 interface VoteItemProps {
-  vote: Vote;
-  onSelectVote: (vote: Vote) => void; // Callback to open details/voting modal
+  vote: Vote
+  onSelectVote: (vote: Vote) => void // Callback to open details/voting modal
 }
 
 const formatDate = (dateString: string | null) => {
-  if (!dateString) return 'N/A';
+  if (!dateString) return 'N/A'
   try {
     return new Date(dateString).toLocaleString(undefined, {
-      year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
-    });
-  } catch (error) {
-    return dateString;
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+    })
+  } catch  {
+    return dateString
   }
-};
+}
 
 const VoteItem: React.FC<VoteItemProps> = ({ vote, onSelectVote }) => {
-  const statusColor = vote.status === 'active' ? 'text-green-400' : 'text-gray-400';
-  const statusBg = vote.status === 'active' ? 'bg-green-500/20' : 'bg-gray-500/20';
+  const statusColor =
+    vote.status === 'active' ? 'text-green-400' : 'text-gray-400'
+  const statusBg =
+    vote.status === 'active' ? 'bg-green-500/20' : 'bg-gray-500/20'
 
   return (
     <Card
-      className="glass-card overflow-hidden transition-all duration-300 hover:shadow-aurora cursor-pointer"
+      className="glass-card hover:shadow-aurora cursor-pointer overflow-hidden transition-all duration-300"
       onClick={() => onSelectVote(vote)}
     >
       <CardHeader className="pb-3">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg font-semibold text-white">{vote.title}</CardTitle>
-          <div className={`text-xs px-2 py-0.5 rounded-full ${statusBg} ${statusColor} capitalize`}>
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg font-semibold text-white">
+            {vote.title}
+          </CardTitle>
+          <div
+            className={`rounded-full px-2 py-0.5 text-xs ${statusBg} ${statusColor} capitalize`}
+          >
             {vote.status}
           </div>
         </div>
-        {vote.description && <CardDescription className="text-xs text-gray-400 mt-1 truncate">{vote.description}</CardDescription>}
+        {vote.description && (
+          <CardDescription className="mt-1 truncate text-xs text-gray-400">
+            {vote.description}
+          </CardDescription>
+        )}
       </CardHeader>
-      <CardContent className="text-sm text-gray-300 pb-3 space-y-1.5">
+      <CardContent className="space-y-1.5 pb-3 text-sm text-gray-300">
         <div className="flex items-center text-xs text-gray-400">
           <Users size={14} className="mr-1.5 text-aurora-blue" />
           <span>{vote.total_votes} Total Votes</span>
@@ -52,16 +73,25 @@ const VoteItem: React.FC<VoteItemProps> = ({ vote, onSelectVote }) => {
         <div className="flex items-center text-xs text-gray-400">
           <CheckSquare size={14} className="mr-1.5 text-aurora-yellow" />
           <span>{vote.options.length} Options</span>
-          {vote.multiple_choice && <span className="ml-1 text-xs">(Multi-choice)</span>}
+          {vote.multiple_choice && (
+            <span className="ml-1 text-xs">(Multi-choice)</span>
+          )}
         </div>
       </CardContent>
       <CardFooter className="bg-white/5 p-3">
-        <Button variant="link" className="text-aurora-pink p-0 h-auto text-sm" onClick={(e) => { e.stopPropagation(); onSelectVote(vote); }}>
+        <Button
+          variant="link"
+          className="h-auto p-0 text-sm text-aurora-pink"
+          onClick={e => {
+            e.stopPropagation()
+            onSelectVote(vote)
+          }}
+        >
           <PieChart size={16} className="mr-1.5" /> View Details & Vote
         </Button>
       </CardFooter>
     </Card>
-  );
-};
+  )
+}
 
-export default VoteItem;
+export default VoteItem

@@ -25,7 +25,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'name', 'password', 'password_confirm', 'tokens')
+        fields = ('id', 'email', 'first_name', 'last_name', 'password', 'password_confirm', 'tokens')
         extra_kwargs = {
             'password': {'write_only': True},
             'password_confirm': {'write_only': True},
@@ -95,14 +95,21 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         # Remove password_confirm from validated_data
         validated_data.pop('password_confirm', None)
         
-        # Create user with encrypted password
-        user = User.objects.create_user(
-            email=validated_data['email'],
-            password=validated_data['password'],
-            name=validated_data.get('name', ''),
-            username=validated_data['email']  # Set username same as email
+        # Extract password and other fields
+        password = validated_data.pop('password')
+        email = validated_data.get('email')
+        first_name = validated_data.get('first_name', '')
+        last_name = validated_data.get('last_name', '')
+
+        # Create user instance without saving password yet
+        user = User(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            username=email  # Set username same as email
         )
-        
+        user.set_password(password)  # Hash the password
+        user.save()
         return user
 
     def get_tokens(self, user):
@@ -124,7 +131,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'name', 'avatar', 'avatar_url', 'date_joined', 'last_login')
+        fields = ('id', 'email', 'first_name', 'last_name', 'avatar', 'avatar_url', 'date_joined', 'last_login')
         read_only_fields = ('id', 'email', 'date_joined', 'last_login')
 
     def get_avatar_url(self, obj):
@@ -147,7 +154,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('name', 'avatar', 'avatar_url')
+        fields = ('first_name', 'last_name', 'avatar', 'avatar_url')
 
     def validate_avatar(self, value):
         """

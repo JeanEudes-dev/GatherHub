@@ -14,8 +14,8 @@ class UserVoteSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CustomUser
-        fields = ['id', 'name', 'email']
-        read_only_fields = ['id', 'name', 'email']
+        fields = ['id', 'first_name', 'last_name', 'email']
+        read_only_fields = ['id', 'first_name', 'last_name', 'email']
 
 
 class TimeslotBasicSerializer(serializers.ModelSerializer):
@@ -174,7 +174,8 @@ class EventVotingSummarySerializer(serializers.Serializer):
             'status': obj.status,
             'created_by': {
                 'id': obj.created_by.pk,
-                'name': obj.created_by.name,
+                'first_name': obj.created_by.first_name,
+                'last_name': obj.created_by.last_name,
                 'email': obj.created_by.email
             }
         }

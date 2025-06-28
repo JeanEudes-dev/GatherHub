@@ -7,7 +7,8 @@ class CustomUser(AbstractUser):
     Custom User model with email as username field.
     """
     email = models.EmailField(unique=True)
-    name = models.CharField(max_length=150, blank=True)
+    first_name = models.CharField(max_length=150, blank=True)
+    last_name = models.CharField(max_length=150, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
     
     USERNAME_FIELD = 'email'
@@ -22,4 +23,4 @@ class CustomUser(AbstractUser):
         return self.email
     
     def get_full_name(self):
-        return self.name or self.email
+        return f"{self.first_name} {self.last_name}" or self.email

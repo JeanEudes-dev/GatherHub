@@ -131,7 +131,8 @@ class VotingConsumer(BaseConsumer):
                     'timeslot_id': timeslot_id,
                     'user': {
                         'id': self.user.id, # type: ignore
-                        'name': self.user.name, # type: ignore
+                        'first_name': self.user.first_name, # type: ignore
+                        'last_name': self.user.last_name, # type: ignore
                         'email': self.user.email # type: ignore
                     },
                     'new_vote_count': vote_count,
@@ -171,7 +172,8 @@ class VotingConsumer(BaseConsumer):
                     'timeslot_id': timeslot_id,
                     'user': {
                         'id': self.user.id, # type: ignore
-                        'name': self.user.name, # type: ignore
+                        'first_name': self.user.first_name, # type: ignore
+                        'last_name': self.user.last_name, # type: ignore
                         'email': self.user.email # type: ignore
                     },
                     'new_vote_count': vote_count,

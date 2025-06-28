@@ -11,7 +11,7 @@ class UserBasicSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['id', 'name', 'email']
+        fields = ['id', 'first_name', 'last_name', 'email']
 
 
 class EventBasicSerializer(serializers.ModelSerializer):

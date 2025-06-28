@@ -29,7 +29,8 @@ def vote_added_signal(sender, instance, created, **kwargs):
                 'timeslot_id': instance.timeslot.id,
                 'user': {
                     'id': instance.user.id,
-                    'name': instance.user.name,
+                    'first_name': instance.user.first_name,
+                    'last_name': instance.user.last_name,
                     'email': instance.user.email
                 },
                 'new_vote_count': instance.timeslot.votes.count(),
@@ -76,7 +77,8 @@ def vote_removed_signal(sender, instance, **kwargs):
                 'timeslot_id': instance.timeslot.id,
                 'user': {
                     'id': instance.user.id,
-                    'name': instance.user.name,
+                    'first_name': instance.user.first_name,
+                    'last_name': instance.user.last_name,
                     'email': instance.user.email
                 },
                 'new_vote_count': new_vote_count,

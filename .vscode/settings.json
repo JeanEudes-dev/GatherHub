@@ -1,0 +1,16 @@
+{
+  "cSpell.words": [
+    "collectstatic",
+    "filterset",
+    "gatherhub",
+    "gunicorn",
+    "libpq",
+    "noinput",
+    "PYTHONDONTWRITEBYTECODE",
+    "PYTHONUNBUFFERED",
+    "setuptools",
+    "timeslot",
+    "timeslots",
+    "uvicorn"
+  ]
+}

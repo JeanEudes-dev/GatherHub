@@ -1,67 +1,98 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+:root {
+  --background: 0 0% 3.9%; /* Dark theme base */
+  --foreground: 0 0% 98%;
+  --card: 0 0% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 0 0% 98%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 14.9%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 14.9%;
+  --muted-foreground: 0 0% 63.9%;
+  --accent: 0 0% 14.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 14.9%;
+  --input: 0 0% 14.9%;
+  --ring: 0 0% 83.1%;
+  --radius: 0.5rem;
 
-@layer base {
-  :root {
-    --background: 0 0% 3.9%; /* Dark theme base */
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --radius: 0.5rem;
-
-    /* Aurora Colors from frontend/README.md (example usage) */
-    --aurora-blue: #60a5fa;
-    --aurora-purple: #a855f7;
-    --aurora-pink: #ec4899;
-    --aurora-green: #10b981;
-    --aurora-yellow: #f59e0b;
-    --aurora-red: #ef4444;
-  }
-
-  .dark {
-    /* Potentially different variables for dark theme if not default */
-  }
+  /* Aurora Colors from frontend/README.md (example usage) */
+  --aurora-blue: #60a5fa;
+  --aurora-purple: #a855f7;
+  --aurora-pink: #ec4899;
+  --aurora-green: #10b981;
+  --aurora-yellow: #f59e0b;
+  --aurora-red: #ef4444;
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1; /* Optional: for nicer font rendering */
-  }
+/* Add dark theme overrides here if needed */
+
+/* Base styles */
+* {
+  border-color: hsl(var(--border));
+}
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings:
+    'rlig' 1,
+    'calt' 1; /* Optional: for nicer font rendering */
 }
 
 /* Aurora Animations */
 @keyframes aurora-1 {
-  0%, 100% { transform: translateX(0%) translateY(0%) scale(1); filter: blur(20px); opacity: 0.5; }
-  25% { transform: translateX(5%) translateY(10%) scale(1.2); filter: blur(30px); opacity: 0.7; }
-  50% { transform: translateX(-5%) translateY(-10%) scale(1.1); filter: blur(25px); opacity: 0.6; }
-  75% { transform: translateX(10%) translateY(-5%) scale(1.3); filter: blur(35px); opacity: 0.8; }
+  0%,
+  100% {
+    transform: translateX(0%) translateY(0%) scale(1);
+    filter: blur(20px);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translateX(5%) translateY(10%) scale(1.2);
+    filter: blur(30px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateX(-5%) translateY(-10%) scale(1.1);
+    filter: blur(25px);
+    opacity: 0.6;
+  }
+  75% {
+    transform: translateX(10%) translateY(-5%) scale(1.3);
+    filter: blur(35px);
+    opacity: 0.8;
+  }
 }
 
 @keyframes aurora-2 {
-  0%, 100% { transform: translateX(0%) translateY(0%) scale(1); filter: blur(30px); opacity: 0.4; }
-  25% { transform: translateX(-8%) translateY(-12%) scale(1.3); filter: blur(40px); opacity: 0.6; }
-  50% { transform: translateX(8%) translateY(12%) scale(1.05); filter: blur(35px); opacity: 0.5; }
-  75% { transform: translateX(-12%) translateY(8%) scale(1.2); filter: blur(45px); opacity: 0.7; }
+  0%,
+  100% {
+    transform: translateX(0%) translateY(0%) scale(1);
+    filter: blur(30px);
+    opacity: 0.4;
+  }
+  25% {
+    transform: translateX(-8%) translateY(-12%) scale(1.3);
+    filter: blur(40px);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateX(8%) translateY(12%) scale(1.05);
+    filter: blur(35px);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateX(-12%) translateY(8%) scale(1.2);
+    filter: blur(45px);
+    opacity: 0.7;
+  }
 }
 
 .animate-aurora-1 {
@@ -75,38 +106,81 @@
 
 /* Glassmorphism Card (Example - can be refined) */
 .glass-card {
-  @apply bg-white/5 backdrop-blur-lg shadow-lg border border-white/10 rounded-xl;
-  /* Adjust alpha, blur, and shadow as needed for the desired effect */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
 }
 
 /* Neon Accents (Example for buttons - can be refined) */
 .btn-aurora {
-  @apply bg-gradient-to-r from-aurora-purple via-aurora-pink to-aurora-red text-white shadow-md transition-all duration-300 ease-in-out;
-  box-shadow: 0 0 5px var(--aurora-pink), 0 0 10px var(--aurora-pink), 0 0 15px var(--aurora-red);
-}
-.btn-aurora:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px var(--aurora-pink), 0 0 20px var(--aurora-pink), 0 0 30px var(--aurora-red);
+  background: linear-gradient(
+    90deg,
+    var(--aurora-purple),
+    var(--aurora-pink),
+    var(--aurora-red)
+  );
+  color: #fff;
+  box-shadow:
+    0 0 5px var(--aurora-pink),
+    0 0 10px var(--aurora-pink),
+    0 0 15px var(--aurora-red);
+  transition: all 0.3s ease-in-out;
 }
 
 .btn-glass {
-  @apply bg-white/10 backdrop-blur-md border border-white/20 text-white shadow-md transition-all duration-300 ease-in-out;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease-in-out;
 }
+
 .btn-glass:hover {
-  @apply bg-white/20 border-white/30;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-/* Shadow Aurora (Example for general elements) */
 .shadow-aurora {
-   filter: drop-shadow(0 0 10px var(--aurora-blue)) drop-shadow(0 0 20px var(--aurora-purple));
+  filter: drop-shadow(0 0 10px var(--aurora-blue))
+    drop-shadow(0 0 20px var(--aurora-purple));
 }
 
 /* Ensure html, body, and root element take full height for fixed backgrounds */
-html, body, #root {
+html,
+body,
+#root {
   height: 100%;
 }
 
 body {
   position: relative; /* For z-indexing of AuroraBackground */
+}
+
+@keyframes aurora-1 {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  50% {
+    transform: translateX(20px) translateY(10px) scale(1.1);
+  }
+}
+@keyframes aurora-2 {
+  0%,
+  100% {
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  50% {
+    transform: translateX(-15px) translateY(-5px) scale(1.05);
+  }
+}
+.animate-aurora-1 {
+  animation: aurora-1 15s infinite ease-in-out;
+}
+.animate-aurora-2 {
+  animation: aurora-2 18s infinite ease-in-out;
 }

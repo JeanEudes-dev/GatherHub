@@ -31,7 +31,8 @@ def task_updated_signal(sender, instance, created, **kwargs):
             'status': instance.status,
             'assigned_to': {
                 'id': instance.assigned_to.id,
-                'name': instance.assigned_to.name
+                'first_name': instance.assigned_to.first_name,
+                'last_name': instance.assigned_to.last_name
             } if instance.assigned_to else None
         }
         
@@ -86,7 +87,8 @@ def task_deleted_signal(sender, instance, **kwargs):
             'status': instance.status,
             'assigned_to': {
                 'id': instance.assigned_to.id,
-                'name': instance.assigned_to.name
+                'first_name': instance.assigned_to.first_name,
+                'last_name': instance.assigned_to.last_name
             } if instance.assigned_to else None
         }
         

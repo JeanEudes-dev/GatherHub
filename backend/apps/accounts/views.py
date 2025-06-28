@@ -12,6 +12,8 @@ from .serializers import (
     UserUpdateSerializer,
     PasswordChangeSerializer
 )
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate
 
 User = get_user_model()
 
@@ -119,11 +121,12 @@ class UserRegistrationView(APIView):
             # Return user data with tokens
             response_data = {
                 'user': {
-                    'id': user.pk,
-                    'email': user.email,
-                    'name': user.name,
+                    'id': user.pk, # type: ignore
+                    'email': user.email, # type: ignore
+                    'first_name': user.first_name, # type: ignore
+                    'last_name': user.last_name, # type: ignore
                 },
-                'tokens': serializer.get_tokens(user),
+                'tokens': serializer.get_tokens(user), # type: ignore
                 'message': 'User registered successfully.'
             }
             
@@ -434,3 +437,116 @@ class PasswordChangeView(APIView):
             }, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@extend_schema_view(
+    post=extend_schema(
+        summary="User Login",
+        description="""
+        Authenticate a user and return JWT tokens.
+
+        Accepts email and password, validates credentials, and returns access/refresh tokens and user info.
+        """,
+        tags=["Authentication"],
+        examples=[
+            OpenApiExample(
+                'Valid Login',
+                summary='Successful user login',
+                description='Example of a valid login request',
+                value={
+                    'email': 'john.doe@example.com',
+                    'password': 'securepassword123'
+                },
+                request_only=True,
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                description='Login successful',
+                examples=[
+                    OpenApiExample(
+                        'Login Success',
+                        summary='Successful login response',
+                        description='User authenticated with JWT tokens',
+                        value={
+                            'user': {
+                                'id': 1,
+                                'email': 'john.doe@example.com',
+                                'name': 'John Doe'
+                            },
+                            'tokens': {
+                                'access': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...',
+                                'refresh': 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...'
+                            },
+                            'message': 'Login successful.'
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description='Invalid credentials',
+                examples=[
+                    OpenApiExample(
+                        'Login Error',
+                        summary='Invalid login data',
+                        description='Invalid email or password',
+                        value={
+                            'detail': 'Invalid credentials.'
+                        }
+                    )
+                ]
+            )
+        }
+    )
+)
+class UserLoginView(APIView):
+    """
+    User login endpoint with JWT token generation.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
+
+        if not email :
+            return Response(
+                {'detail': 'Email is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        if not password:
+            return Response(
+                {'detail': 'Password is required.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user_obj = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'No user found with this email.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user = authenticate(request, username=user_obj.username, password=password)
+        if user is None:
+            return Response(
+                {'detail': 'Incorrect password.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        refresh = RefreshToken.for_user(user)
+        response_data = {
+            'user': {
+                'id': user.pk,
+                'email': user.email,
+                'first_name': getattr(user, 'first_name', ''),
+                'last_name': getattr(user, 'last_name', ''),
+            },
+            'tokens': {
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+            },
+            'message': 'Login successful.'
+        }
+        return Response(response_data, status=status.HTTP_200_OK)

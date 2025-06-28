@@ -65,7 +65,8 @@ class TasksConsumer(BaseConsumer):
                 if task.assigned_to:
                     task_data['assigned_to'] = {
                         'id': task.assigned_to.id,
-                        'name': task.assigned_to.name,
+                        'first_name': task.assigned_to.first_name,
+                        'last_name': task.assigned_to.last_name,
                         'email': task.assigned_to.email
                     }
                 
@@ -153,7 +154,8 @@ class TasksConsumer(BaseConsumer):
                 },
                 'created_by': {
                     'id': self.user.id, # type: ignore
-                    'name': self.user.name # type: ignore
+                    'first_name': self.user.first_name, # type: ignore
+                    'last_name': self.user.last_name # type: ignore
                 },
                 'timestamp': self.get_timestamp()
             }
@@ -196,11 +198,13 @@ class TasksConsumer(BaseConsumer):
                 changes['assigned_to'] = {
                     'from': {
                         'id': old_assigned.id,
-                        'name': old_assigned.name
+                        'first_name': old_assigned.first_name,
+                        'last_name': old_assigned.last_name
                     } if old_assigned else None,
                     'to': {
                         'id': task.assigned_to.id, # type: ignore
-                        'name': task.assigned_to.name # type: ignore
+                        'first_name': task.assigned_to.first_name, # type: ignore
+                        'last_name': task.assigned_to.last_name # type: ignore
                     } if task.assigned_to else None
                 }
             
@@ -219,12 +223,14 @@ class TasksConsumer(BaseConsumer):
                     'status': task.status,
                     'assigned_to': {
                         'id': task.assigned_to.id,
-                        'name': task.assigned_to.name
+                        'first_name': task.assigned_to.first_name,
+                        'last_name': task.assigned_to.last_name
                     } if task.assigned_to else None
                 },
                 'changed_by': {
                     'id': self.user.id, # type: ignore
-                    'name': self.user.name # type: ignore
+                    'first_name': self.user.first_name, # type: ignore
+                    'last_name': self.user.last_name # type: ignore
                 },
                 'changes': changes,
                 'timestamp': self.get_timestamp()
@@ -251,12 +257,14 @@ class TasksConsumer(BaseConsumer):
                     'status': task.status,
                     'assigned_to': {
                         'id': task.assigned_to.id,
-                        'name': task.assigned_to.name
+                        'first_name': task.assigned_to.first_name,
+                        'last_name': task.assigned_to.last_name
                     } if task.assigned_to else None
                 },
                 'deleted_by': {
                     'id': self.user.id, # type: ignore
-                    'name': self.user.name # type: ignore
+                    'first_name': self.user.first_name, # type: ignore
+                    'last_name': self.user.last_name # type: ignore
                 },
                 'timestamp': self.get_timestamp()
             }
